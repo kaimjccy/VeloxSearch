@@ -1,0 +1,17 @@
+cryptography==49.0.0
+fastapi==0.137.0
+firebase_admin==7.4.0
+genson==1.3.0
+hnswlib==0.8.0
+jsonschema==4.26.0
+nltk==3.9.2
+pydantic==2.13.4
+PyJWT==2.13.0
+pytest==9.0.1
+python-dotenv==1.2.2
+redis==8.0.0
+rq==2.9.1
+sentence_transformers==5.2.0
+starlette==1.3.1
+uvicorn==0.49.0
+xxhash==3.7.0
