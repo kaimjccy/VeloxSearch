@@ -1,0 +1,58 @@
+import os
+import random
+import subprocess
+from datetime import datetime, timedelta
+
+# Defining the target date range (May 10 to June 8, 2026)
+start_date = datetime(2026, 5, 10, 9, 0, 0)
+end_date = datetime(2026, 6, 8, 18, 0, 0)
+delta_days = (end_date - start_date).days
+
+def get_random_iso_date():
+    """Generates a random timestamp between May 10 and June 8."""
+    random_day = random.randint(0, delta_days)
+    random_hour = random.randint(9, 18)  # Random time during standard working hours
+    random_minute = random.randint(0, 59)
+    random_second = random.randint(0, 59)
+    
+    spoofed_date = start_date + timedelta(days=random_day, hours=random_hour-9, minutes=random_minute, seconds=random_second)
+    return spoofed_date.isoformat()
+
+def run_git_cmd(env_vars, cmd):
+    """Executes a git command with spoofed date environment variables."""
+    env = os.environ.copy()
+    env.update(env_vars)
+    subprocess.run(cmd, env=env, shell=True)
+
+print("1. Initializing Git repository...")
+subprocess.run("git init", shell=True)
+
+print("2. Scanning files and committing them with custom dates...")
+# Walk through every file and folder in the directory
+for root, dirs, files in os.walk("."):
+    # Skip git configuration files and the script itself
+    if ".git" in root or "backdate.py" in root:
+        continue
+        
+    for file in files:
+        file_path = os.path.join(root, file)
+        
+        # Stage this specific file
+        subprocess.run(f'git add "{file_path}"', shell=True)
+        
+        # Check if there's actually a change staged to commit
+        status = subprocess.run("git diff --cached --quiet", shell=True)
+        if status.returncode != 0:  
+            commit_date = get_random_iso_date()
+            commit_msg = f"Update {file}" if "src" in file_path else f"Add {file} component"
+            
+            # Inject the fake dates into Git's core variables
+            env_vars = {
+                "GIT_AUTHOR_DATE": commit_date,
+                "GIT_COMMITTER_DATE": commit_date
+            }
+            
+            print(f"-> Committing: {file_path} | Date: {commit_date}")
+            run_git_cmd(env_vars, f'git commit -m "{commit_msg}"')
+
+print("\nSuccess! All individual files committed locally with randomized historical dates.")
